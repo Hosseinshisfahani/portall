@@ -1,0 +1,238 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}پلتفرم جامع آموزشی{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'images/shirneshan_logo.svg' %}" type="image/svg+xml">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+    <!-- Bootstrap RTL CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Vazirmatn Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn-font@v33.003/dist/Vazirmatn-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        *:not(.fa, .fas, .far, .fal, .fab, .fa-solid) {
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+        }
+        
+        body {
+            padding-top: 56px;
+            font-weight: 400;
+            line-height: 1.8;
+            text-align: right;
+            direction: rtl;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            font-weight: 500;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-logo {
+            height: 30px;
+            margin-left: 10px;
+        }
+        
+        .me-auto {
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+        
+        .ms-auto {
+            margin-right: auto !important;
+            margin-left: 0 !important;
+        }
+        
+        .btn {
+            font-weight: 500;
+        }
+        
+        .card-title {
+            font-weight: 600;
+        }
+        
+        .table th {
+            font-weight: 600;
+        }
+        
+        /* Persian-specific text styling */
+        .persian-text {
+            letter-spacing: -0.5px;
+            word-spacing: 2px;
+        }
+        
+        /* Improve readability for Persian numbers */
+        .persian-numbers {
+            font-feature-settings: "ss01";
+        }
+        
+        /* Force RTL for all elements */
+        *[dir="rtl"] {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+        
+        /* Ensure proper font rendering */
+        body, p, span, div, a, button, input, textarea, select {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Icon styling */
+        .fa, .fas, .far, .fal, .fab, .fa-solid {
+            font-family: "Font Awesome 6 Free" !important;
+        }
+        
+        .fa-3x {
+            font-size: 3em;
+            margin-bottom: 1rem;
+        }
+        
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(13, 110, 253, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+        
+        .icon-circle i {
+            color: #0d6efd;
+        }
+        
+        .card:hover .icon-circle {
+            transform: scale(1.1);
+            background-color: rgba(13, 110, 253, 0.15);
+        }
+        
+        /* Admin panel button styling */
+        .nav-link.admin-link {
+            background-color: #dc3545;
+            color: white !important;
+            border-radius: 4px;
+            padding: 8px 16px !important;
+            margin: 4px 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link.admin-link:hover {
+            background-color: #bb2d3b;
+            transform: translateY(-1px);
+        }
+        
+        .nav-link.admin-link i {
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body class="persian-text" dir="rtl">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'gym:home' %}">
+                <img src="{% static 'images/shirneshan_logo.svg' %}" alt="پلتفرم جامع آموزشی" class="navbar-logo">
+                پلتفرم جامع آموزشی
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'gym:profile' %}">پروفایل</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'gym:workout_plans' %}">برنامه‌های تمرینی</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'gym:diet_plans' %}">برنامه‌های غذایی</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'gym:attendance' %}">حضور و غیاب</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exams:exam_list' %}">آزمون‌های آنلاین</a>
+                        </li>
+                        {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gym:attendance_management' %}">مدیریت حضور و غیاب</a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link admin-link" href="{% url 'admin:index' %}">
+                                    <i class="fas fa-cog"></i>
+                                    ورود به صفحه مدیریت سایت
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'gym:logout' %}">خروج</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'gym:login' %}">ورود</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'gym:register' %}">ثبت نام</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

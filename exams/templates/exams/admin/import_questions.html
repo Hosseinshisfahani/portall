@@ -1,0 +1,83 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+
+{% block title %}پلتفرم جامع آموزشی - وارد کردن سوالات{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center">وارد کردن سوالات</h2>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">آپلود فایل JSON سوالات</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">راهنما:</h5>
+                            <p>برای وارد کردن سوالات، یک فایل JSON با ساختار زیر آماده کنید:</p>
+                            <pre class="bg-light p-3 mt-2 mb-0 rounded">
+{
+  "exam_info": {
+    "course": "نام درس",
+    "grade": "پایه",
+    "field": "رشته",
+    "exam_date": "تاریخ آزمون",
+    "duration": "مدت زمان"
+  },
+  "questions": [
+    {
+      "question": "متن سوال",
+      "options": ["گزینه 1", "گزینه 2", "گزینه 3", "گزینه 4"],  // اختیاری برای سوالات چندگزینه‌ای
+      "answer": "پاسخ سوال"
+    },
+    ...
+  ]
+}
+</pre>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="exam" class="form-label">انتخاب آزمون</label>
+                            <select class="form-select" id="exam" name="exam" required>
+                                <option value="" selected disabled>-- انتخاب آزمون --</option>
+                                {% for exam_obj in exams %}
+                                    <option value="{{ exam_obj.id }}">{{ exam_obj.title }} ({{ exam_obj.course }} - {{ exam_obj.grade }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">آزمون مورد نظر را که می‌خواهید سوالات به آن اضافه شود انتخاب کنید.</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="json_file" class="form-label">فایل JSON سوالات</label>
+                            <input class="form-control" type="file" id="json_file" name="json_file" accept="application/json" required>
+                            <div class="form-text">فایل JSON حاوی سوالات را انتخاب کنید.</div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> توجه: در صورتی که آزمون انتخابی از قبل دارای سوال باشد، سوالات جدید به آن اضافه خواهند شد.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-file-import"></i> وارد کردن سوالات
+                            </button>
+                            <a href="{% url 'exams:manage_exams' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-right"></i> بازگشت
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

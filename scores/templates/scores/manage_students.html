@@ -1,0 +1,171 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+
+{% block title %}مدیریت دانش‌آموزان{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">مدیریت دانش‌آموزان</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Search and Filter Form -->
+                    <form method="get" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <input type="text" name="search" class="form-control" placeholder="جستجو..." value="{{ search_query }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <select name="school" class="form-control">
+                                        <option value="">انتخاب مدرسه</option>
+                                        {% for school in schools %}
+                                            <option value="{{ school.id }}" {% if selected_school == school.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ school.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <select name="grade" class="form-control">
+                                        <option value="">انتخاب پایه</option>
+                                        {% for grade in grades %}
+                                            <option value="{{ grade.id }}" {% if selected_grade == grade.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ grade.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <select name="class" class="form-control">
+                                        <option value="">انتخاب کلاس</option>
+                                        {% for class in classes %}
+                                            <option value="{{ class.id }}" {% if selected_class == class.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ class.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">فیلتر</button>
+                                <a href="{% url 'scores:manage_students' %}" class="btn btn-secondary">پاک کردن فیلترها</a>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Students Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>نام و نام خانوادگی</th>
+                                    <th>کد ملی</th>
+                                    <th>شماره تماس</th>
+                                    <th>مدرسه</th>
+                                    <th>پایه</th>
+                                    <th>کلاس</th>
+                                    <th>عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>{{ student.user.get_full_name }}</td>
+                                    <td>{{ student.melli_code }}</td>
+                                    <td>{{ student.phone_number }}</td>
+                                    <td>
+                                        {% with class=student.user.enrolled_classes.first %}
+                                            {% if class %}
+                                                {{ class.grade.school.name }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with class=student.user.enrolled_classes.first %}
+                                            {% if class %}
+                                                {{ class.grade.name }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with class=student.user.enrolled_classes.first %}
+                                            {% if class %}
+                                                {{ class.name }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'gym:profile' %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> مشاهده
+                                        </a>
+                                        <a href="{% url 'scores:scores' %}?student={{ student.user.id }}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-chart-bar"></i> نمرات
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">هیچ دانش‌آموزی یافت نشد</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // School change handler
+        $('select[name="school"]').change(function() {
+            var schoolId = $(this).val();
+            if (schoolId) {
+                $.get('/scores/get-grades/', {school_id: schoolId}, function(data) {
+                    var gradeSelect = $('select[name="grade"]');
+                    gradeSelect.empty().append('<option value="">انتخاب پایه</option>');
+                    data.grades.forEach(function(grade) {
+                        gradeSelect.append(`<option value="${grade.id}">${grade.name}</option>`);
+                    });
+                });
+            }
+        });
+
+        // Grade change handler
+        $('select[name="grade"]').change(function() {
+            var gradeId = $(this).val();
+            if (gradeId) {
+                $.get('/scores/get-classes/', {grade_id: gradeId}, function(data) {
+                    var classSelect = $('select[name="class"]');
+                    classSelect.empty().append('<option value="">انتخاب کلاس</option>');
+                    data.forEach(function(class_) {
+                        classSelect.append(`<option value="${class_.id}">${class_.name}</option>`);
+                    });
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

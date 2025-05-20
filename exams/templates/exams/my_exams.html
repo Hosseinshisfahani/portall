@@ -1,0 +1,246 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+{% load exam_tags %}
+
+{% block title %}پلتفرم جامع آموزشی - آزمون‌های من{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center">آزمون‌های من</h2>
+            <p class="text-center text-muted">لیست آزمون‌هایی که در آنها ثبت‌نام کرده‌اید</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            {% if registrations %}
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="exam-tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-exams" type="button" role="tab" aria-controls="all-exams" aria-selected="true">همه</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-exams" type="button" role="tab" aria-controls="pending-exams" aria-selected="false">در انتظار تایید</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved-exams" type="button" role="tab" aria-controls="approved-exams" aria-selected="false">تایید شده</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-exams" type="button" role="tab" aria-controls="completed-exams" aria-selected="false">تکمیل شده</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="exam-tab-content">
+                            <!-- All Exams Tab -->
+                            <div class="tab-pane fade show active" id="all-exams" role="tabpanel" aria-labelledby="all-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>آزمون</th>
+                                                <th>وضعیت</th>
+                                                <th>تاریخ ثبت‌نام</th>
+                                                <th>تاریخ شروع</th>
+                                                <th>تاریخ پایان</th>
+                                                <th>عملیات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reg in registrations %}
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ reg.exam.title }}</strong>
+                                                        <div class="small text-muted">{{ reg.exam.course }} - {{ reg.exam.grade }}</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge 
+                                                            {% if reg.status == 'pending' %}bg-warning
+                                                            {% elif reg.status == 'rejected' %}bg-danger
+                                                            {% elif reg.status == 'approved' %}bg-success
+                                                            {% elif reg.status == 'completed' %}bg-secondary
+                                                            {% endif %}">
+                                                            {{ reg.get_status_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ reg.created_at|date:"Y/m/d" }}</td>
+                                                    <td>{% if reg.started_at %}{{ reg.started_at|date:"Y/m/d H:i" }}{% else %}-{% endif %}</td>
+                                                    <td>{% if reg.completed_at %}{{ reg.completed_at|date:"Y/m/d H:i" }}{% else %}-{% endif %}</td>
+                                                    <td>
+                                                        <a href="{% url 'exams:exam_detail' exam_id=reg.exam.id %}" class="btn btn-sm btn-info">
+                                                            جزئیات
+                                                        </a>
+                                                        {% if reg.status == 'approved' and not reg.completed_at %}
+                                                            <a href="{% url 'exams:take_exam' registration_id=reg.id %}" class="btn btn-sm btn-success">
+                                                                شروع آزمون
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Pending Exams Tab -->
+                            <div class="tab-pane fade" id="pending-exams" role="tabpanel" aria-labelledby="pending-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>آزمون</th>
+                                                <th>تاریخ ثبت‌نام</th>
+                                                <th>عملیات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reg in registrations %}
+                                                {% if reg.status == 'pending' %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ reg.exam.title }}</strong>
+                                                            <div class="small text-muted">{{ reg.exam.course }} - {{ reg.exam.grade }}</div>
+                                                        </td>
+                                                        <td>{{ reg.created_at|date:"Y/m/d" }}</td>
+                                                        <td>
+                                                            <a href="{% url 'exams:exam_detail' exam_id=reg.exam.id %}" class="btn btn-sm btn-info">
+                                                                جزئیات
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if not registrations|has_status:'pending' %}
+                                                <tr>
+                                                    <td colspan="3" class="text-center py-3">
+                                                        <div class="alert alert-info mb-0">
+                                                            هیچ آزمون در انتظار تاییدی وجود ندارد
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Approved Exams Tab -->
+                            <div class="tab-pane fade" id="approved-exams" role="tabpanel" aria-labelledby="approved-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>آزمون</th>
+                                                <th>تاریخ تایید</th>
+                                                <th>زمان باقیمانده</th>
+                                                <th>عملیات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reg in registrations %}
+                                                {% if reg.status == 'approved' and not reg.completed_at %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ reg.exam.title }}</strong>
+                                                            <div class="small text-muted">{{ reg.exam.course }} - {{ reg.exam.grade }}</div>
+                                                        </td>
+                                                        <td>{{ reg.updated_at|date:"Y/m/d" }}</td>
+                                                        <td>
+                                                            {% if reg.started_at %}
+                                                                {{ reg.time_remaining_seconds|format_time_remaining }}
+                                                            {% else %}
+                                                                -
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <a href="{% url 'exams:take_exam' registration_id=reg.id %}" class="btn btn-sm btn-success">
+                                                                شروع آزمون
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if not registrations|has_status:'approved' %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-3">
+                                                        <div class="alert alert-info mb-0">
+                                                            هیچ آزمون تایید شده‌ای وجود ندارد
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Completed Exams Tab -->
+                            <div class="tab-pane fade" id="completed-exams" role="tabpanel" aria-labelledby="completed-tab">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>آزمون</th>
+                                                <th>تاریخ شروع</th>
+                                                <th>تاریخ پایان</th>
+                                                <th>عملیات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reg in registrations %}
+                                                {% if reg.completed_at %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ reg.exam.title }}</strong>
+                                                            <div class="small text-muted">{{ reg.exam.course }} - {{ reg.exam.grade }}</div>
+                                                        </td>
+                                                        <td>{{ reg.started_at|date:"Y/m/d H:i" }}</td>
+                                                        <td>{{ reg.completed_at|date:"Y/m/d H:i" }}</td>
+                                                        <td>
+                                                            <a href="{% url 'exams:exam_detail' exam_id=reg.exam.id %}" class="btn btn-sm btn-info">
+                                                                جزئیات
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if not registrations|has_completed %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-3">
+                                                        <div class="alert alert-info mb-0">
+                                                            هیچ آزمون تکمیل شده‌ای وجود ندارد
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <p class="mb-0">شما تاکنون در هیچ آزمونی ثبت‌نام نکرده‌اید.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'exams:exam_list' %}" class="btn btn-primary">
+                <i class="fas fa-list"></i> مشاهده لیست آزمون‌ها
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 
