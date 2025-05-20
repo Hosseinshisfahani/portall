@@ -1,0 +1,55 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+
+{% block title %}{{ booklet.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="mb-0">{{ booklet.title }}</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="lead">{{ booklet.description }}</p>
+                    <p><strong>قیمت:</strong> {{ booklet.price }} تومان</p>
+                    <p><strong>تاریخ انتشار:</strong> {{ booklet.created_at|date:"Y/m/d" }}</p>
+                    
+                    {% if user.is_staff %}
+                    <div class="mt-4">
+                        <a href="{% url 'gym:booklet_payments' booklet.id %}" class="btn btn-info">
+                            مشاهده پرداخت‌ها
+                        </a>
+                        <a href="{% url 'gym:edit_booklet' booklet.id %}" class="btn btn-warning">
+                            ویرایش جزوه
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-4">
+                    {% if has_paid %}
+                    <div class="text-center">
+                        <a href="{% url 'gym:view_pdf' booklet.id %}" class="btn btn-success btn-lg">
+                            <i class="fas fa-book-reader"></i> مشاهده جزوه
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">درخواست خرید</h5>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'gym:payment_upload' booklet.id %}" class="btn btn-primary">
+                                    <i class="fas fa-money-bill-wave me-2"></i>پرداخت و آپلود رسید
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

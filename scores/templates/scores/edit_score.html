@@ -1,0 +1,60 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+
+{% block title %}ویرایش نمره{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">ویرایش نمره</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label>دانش‌آموز:</label>
+                            <p class="form-control-static">
+                                {{ score.user_profile.first_name }} {{ score.user_profile.last_name }}
+                                ({{ score.user_profile.melli_code }})
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>درس:</label>
+                            <p class="form-control-static">{{ score.subject }}</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="score">نمره:</label>
+                            <input type="number" name="score" id="score" class="form-control" 
+                                   min="0" max="20" step="0.25" value="{{ score.score }}" required>
+                        </div>
+
+                        <div class="form-group text-left">
+                            <a href="{% url 'scores:scores' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right"></i> بازگشت
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ذخیره تغییرات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

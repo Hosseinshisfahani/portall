@@ -1,0 +1,235 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+
+{% block title %}پلتفرم جامع آموزشی - مدیریت ثبت‌نام‌های آزمون{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center">مدیریت ثبت‌نام‌های آزمون</h2>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">فیلترها</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="exam" class="form-label">آزمون</label>
+                            <select class="form-select" id="exam" name="exam">
+                                <option value="" {% if not exam_filter %}selected{% endif %}>همه آزمون‌ها</option>
+                                {% for exam_obj in exams %}
+                                    <option value="{{ exam_obj.id }}" {% if exam_filter == exam_obj.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ exam_obj.title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">وضعیت</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="" {% if not status_filter %}selected{% endif %}>همه</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>در انتظار تایید</option>
+                                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>تایید شده</option>
+                                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>رد شده</option>
+                                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>تکمیل شده</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="search" class="form-label">جستجو</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="جستجو در نام کاربر یا عنوان آزمون..." value="{{ search_query|default:'' }}">
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter"></i> اعمال فیلتر
+                            </button>
+                            <a href="{% url 'exams:manage_registrations' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> حذف فیلترها
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">لیست ثبت‌نام‌ها</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        {% if page_obj %}
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>کاربر</th>
+                                        <th>آزمون</th>
+                                        <th>تاریخ ثبت‌نام</th>
+                                        <th>وضعیت</th>
+                                        <th>تصویر پرداخت</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reg in page_obj %}
+                                        <tr>
+                                            <td>
+                                                {{ reg.user.get_full_name|default:reg.user.username }}
+                                                <div class="small text-muted">{{ reg.user.username }}</div>
+                                            </td>
+                                            <td>
+                                                <strong>{{ reg.exam.title }}</strong>
+                                                <div class="small text-muted">{{ reg.exam.course }} - {{ reg.exam.grade }}</div>
+                                            </td>
+                                            <td>{{ reg.created_at|date:"Y/m/d H:i" }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if reg.status == 'pending' %}bg-warning
+                                                    {% elif reg.status == 'rejected' %}bg-danger
+                                                    {% elif reg.status == 'approved' %}bg-success
+                                                    {% elif reg.status == 'completed' %}bg-secondary
+                                                    {% endif %}">
+                                                    {{ reg.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if reg.payment_image %}
+                                                    <a href="{{ reg.payment_image.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                                        <i class="fas fa-image"></i> مشاهده
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted">بدون تصویر</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ reg.id }}">
+                                                    تغییر وضعیت
+                                                </button>
+                                                
+                                                <!-- Update Status Modal -->
+                                                <div class="modal fade" id="updateStatusModal{{ reg.id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">تغییر وضعیت ثبت‌نام</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <form method="post" action="{% url 'exams:update_registration_status' registration_id=reg.id %}">
+                                                                {% csrf_token %}
+                                                                <div class="modal-body">
+                                                                    <div class="mb-3">
+                                                                        <label for="status{{ reg.id }}" class="form-label">وضعیت جدید</label>
+                                                                        <select class="form-select" id="status{{ reg.id }}" name="status">
+                                                                            <option value="pending" {% if reg.status == 'pending' %}selected{% endif %}>در انتظار تایید</option>
+                                                                            <option value="approved" {% if reg.status == 'approved' %}selected{% endif %}>تایید شده</option>
+                                                                            <option value="rejected" {% if reg.status == 'rejected' %}selected{% endif %}>رد شده</option>
+                                                                            <option value="completed" {% if reg.status == 'completed' %}selected{% endif %}>تکمیل شده</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="admin_note{{ reg.id }}" class="form-label">یادداشت مدیر</label>
+                                                                        <textarea class="form-control" id="admin_note{{ reg.id }}" name="admin_note" rows="3">{{ reg.admin_note }}</textarea>
+                                                                        <div class="form-text">این یادداشت به کاربر نمایش داده خواهد شد.</div>
+                                                                    </div>
+                                                                    
+                                                                    <div class="mb-0">
+                                                                        <p><strong>اطلاعات ثبت‌نام:</strong></p>
+                                                                        <ul>
+                                                                            <li>کاربر: {{ reg.user.get_full_name|default:reg.user.username }}</li>
+                                                                            <li>آزمون: {{ reg.exam.title }}</li>
+                                                                            <li>تاریخ ثبت‌نام: {{ reg.created_at|date:"Y/m/d H:i" }}</li>
+                                                                            <li>شماره کارت: {{ reg.card_number }}</li>
+                                                                            {% if reg.started_at %}
+                                                                                <li>تاریخ شروع آزمون: {{ reg.started_at|date:"Y/m/d H:i" }}</li>
+                                                                            {% endif %}
+                                                                            {% if reg.completed_at %}
+                                                                                <li>تاریخ پایان آزمون: {{ reg.completed_at|date:"Y/m/d H:i" }}</li>
+                                                                            {% endif %}
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                                                                    <button type="submit" class="btn btn-primary">ثبت تغییرات</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <!-- Pagination -->
+                            {% if page_obj.has_other_pages %}
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if exam_filter %}&exam={{ exam_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+                                                    <span aria-hidden="true">&laquo;</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link" aria-hidden="true">&laquo;</span>
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% for i in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == i %}
+                                                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                            {% else %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ i }}{% if exam_filter %}&exam={{ exam_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if exam_filter %}&exam={{ exam_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+                                                    <span aria-hidden="true">&raquo;</span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link" aria-hidden="true">&raquo;</span>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-info">
+                                <p class="mb-0 text-center">هیچ ثبت‌نامی یافت نشد.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'exams:manage_exams' %}" class="btn btn-outline-primary">
+                <i class="fas fa-cogs"></i> مدیریت آزمون‌ها
+            </a>
+            <a href="{% url 'exams:exam_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-eye"></i> مشاهده صفحه آزمون‌ها
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,325 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+{% load score_filters %}
+
+{% block title %}نمرات{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">{% if is_admin %}مدیریت نمرات{% else %}نمرات من{% endif %}</h2>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message|safe }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if is_admin %}
+    <!-- Admin View -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <!-- School Filter -->
+                <div class="col-md-3">
+                    <label for="school" class="form-label">مدرسه</label>
+                    <select name="school" id="school" class="form-select">
+                        <option value="">همه مدارس</option>
+                        {% for school in schools %}
+                        <option value="{{ school.id }}" {% if selected_school == school.id|stringformat:"s" %}selected{% endif %}>
+                            {{ school.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Grade Filter -->
+                {% if grades %}
+                <div class="col-md-3">
+                    <label for="grade" class="form-label">پایه تحصیلی</label>
+                    <select name="grade" id="grade" class="form-select">
+                        <option value="">همه پایه‌ها</option>
+                        {% for grade in grades %}
+                        <option value="{{ grade.id }}" {% if selected_grade == grade.id|stringformat:"s" %}selected{% endif %}>
+                            {{ grade.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Class Filter -->
+                {% if classes %}
+                <div class="col-md-3">
+                    <label for="class" class="form-label">کلاس</label>
+                    <select name="class" id="class" class="form-select">
+                        <option value="">همه کلاس‌ها</option>
+                        {% for class in classes %}
+                        <option value="{{ class.id }}" {% if selected_class == class.id|stringformat:"s" %}selected{% endif %}>
+                            {{ class.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Search -->
+                <div class="col-md-3">
+                    <label for="search" class="form-label">جستجو</label>
+                    <input type="text" name="search" id="search" class="form-control" value="{{ search_query }}" placeholder="نام یا کد ملی دانش‌آموز">
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                    <a href="{% url 'scores:scores' %}" class="btn btn-secondary">حذف فیلتر</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Score Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">افزودن/ویرایش نمره</h5>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="score_id" id="score_id">
+                
+                <div class="col-md-4">
+                    <label for="student" class="form-label">دانش‌آموز</label>
+                    <select name="student" id="student" class="form-select" required>
+                        <option value="">انتخاب دانش‌آموز</option>
+                        {% for student in all_students %}
+                        <option value="{{ student.id }}">{{ student.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="subject" class="form-label">درس</label>
+                    <select name="subject" id="subject" class="form-select" required>
+                        <option value="">انتخاب درس</option>
+                        {% for subject in all_subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="class_obj" class="form-label">کلاس</label>
+                    <select name="class_obj" id="class_obj" class="form-select" required>
+                        <option value="">انتخاب کلاس</option>
+                        {% for class in all_classes %}
+                        <option value="{{ class.id }}">{{ class.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="score" class="form-label">نمره</label>
+                    <input type="number" name="score" id="score" class="form-control" min="0" max="20" step="0.01" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="date" class="form-label">نوبت</label>
+                    <input type="date" name="date" id="date" class="form-control" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="description" class="form-label">توضیحات</label>
+                    <textarea name="description" id="description" class="form-control"></textarea>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" name="add_score" class="btn btn-success">ذخیره نمره</button>
+                </div>
+            </form>
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Scores Table -->
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>دانش‌آموز</th>
+                    <th>مدرسه</th>
+                    <th>پایه</th>
+                    <th>کلاس</th>
+                    <th>درس</th>
+                    <th>نمره</th>
+                    <th>نوبت</th>
+                    <th>توضیحات</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for score in scores %}
+                <tr>
+                    <td>{{ score.user_profile.full_name }}</td>
+                    <td>{{ score.subject.grade.school.name }}</td>
+                    <td>{{ score.subject.grade.name }}</td>
+                    <td>{{ score.class_obj.name }}</td>
+                    <td>{{ score.subject.name }}</td>
+                    <td>{{ score.score }}</td>
+                    <td>مستمری دوم</td>
+                    <td>{{ score.description|default:"-" }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary edit-score" 
+                                data-score-id="{{ score.id }}"
+                                data-student="{{ score.user_profile.id }}"
+                                data-subject="{{ score.subject.id }}"
+                                data-class="{{ score.class_obj.id }}"
+                                data-score="{{ score.score }}"
+                                data-date="{{ score.date|date:'Y-m-d' }}"
+                                data-description="{{ score.description }}">
+                            ویرایش
+                        </button>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="score_id" value="{{ score.id }}">
+                            <button type="submit" name="delete_score" class="btn btn-sm btn-danger" onclick="return confirm('آیا از حذف این نمره اطمینان دارید؟')">
+                                حذف
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center">نمره‌ای یافت نشد.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <!-- Student View -->
+    <div class="row">
+        <!-- Overall Statistics Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">معدل کل</h5>
+                    <h2 class="display-4">{{ avg_score|default:0|floatformat:2 }}</h2>
+                    <div class="progress mt-3">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ avg_score|default:0|multiply:5 }}%" 
+                             aria-valuenow="{{ avg_score|default:0|multiply:5 }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject-wise Scores -->
+        <div class="col-md-8">
+            {% for subject, subject_scores in subjects.items %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ subject.name }}</h5>
+                    <span class="badge bg-primary">
+                        معدل: {{ subject_scores|avg_score|floatformat:2 }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>نوبت</th>
+                                    <th>نمره</th>
+                                    <th>کلاس</th>
+                                    <th>توضیحات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for score in subject_scores %}
+                                <tr>
+                                    <td>مستمری دوم</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if score.score >= 10 %}bg-success{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ score.score|multiply:5 }}%" 
+                                                 aria-valuenow="{{ score.score|multiply:5 }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ score.score }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ score.class_obj.name }}</td>
+                                    <td>{{ score.description|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">هنوز نمره‌ای ثبت نشده است.</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if is_admin %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // School change handler
+    document.getElementById('school').addEventListener('change', function() {
+        document.querySelector('form').submit();
+    });
+
+    // Grade change handler
+    var gradeSelect = document.getElementById('grade');
+    if (gradeSelect) {
+        gradeSelect.addEventListener('change', function() {
+            document.querySelector('form').submit();
+        });
+    }
+
+    // Class change handler
+    var classSelect = document.getElementById('class');
+    if (classSelect) {
+        classSelect.addEventListener('change', function() {
+            document.querySelector('form').submit();
+        });
+    }
+
+    // Edit score handlers
+    document.querySelectorAll('.edit-score').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var data = this.dataset;
+            document.getElementById('score_id').value = data.scoreId;
+            document.getElementById('student').value = data.student;
+            document.getElementById('subject').value = data.subject;
+            document.getElementById('class_obj').value = data.class;
+            document.getElementById('score').value = data.score;
+            document.getElementById('date').value = data.date;
+            document.getElementById('description').value = data.description;
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

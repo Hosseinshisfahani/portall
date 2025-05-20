@@ -1,0 +1,65 @@
+{% extends 'exams/base_exams.html' %}
+{% load static %}
+
+{% block title %}آزمون‌های آنلاین{% endblock %}
+
+{% block content %}
+<!-- Exam dates announcement -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info" role="alert">
+            <h5 class="text-center mb-3"><i class="fas fa-calendar-alt me-2"></i> زمان برگزاری آزمون‌ها</h5>
+            <ul class="mb-0">
+                <li><strong>عربی هشتم و عربی نهم:</strong> زمان برگزاری پانزده خرداد</li>
+                <li><strong>دین و زندگی دهم و دین و زندگی دوازدهم کامپیوتر:</strong> زمان برگزاری بیست و پنج اردیبهشت</li>
+                <li><strong>عربی دهم و عربی یازدهم و عربی دوازدهم معماری:</strong> زمان برگزاری بیست و هفت اردیبهشت</li>
+                <li><strong>مدیریت خانواده:</strong> زمان برگزاری دوازده خرداد</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-center">آزمون‌های آنلاین</h2>
+        <p class="text-center text-muted">از لیست زیر آزمون مورد نظر خود را انتخاب کنید</p>
+    </div>
+</div>
+
+<div class="row">
+    {% if exams %}
+        {% for exam in exams %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ exam.title }}</h5>
+                        <p class="card-text">{{ exam.description|truncatechars:150 }}</p>
+                        <p><strong>درس:</strong> {{ exam.course }}</p>
+                        <p><strong>پایه:</strong> {{ exam.grade }}</p>
+                        <p><strong>هزینه:</strong> {{ exam.price }} هزار تومان</p>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'exams:exam_detail' exam_id=exam.id %}" class="btn btn-primary w-100">
+                            جزئیات و ثبت‌نام
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center mt-4">
+            <div class="alert alert-info">
+                در حال حاضر آزمونی موجود نیست.
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{% url 'gym:dashboard' %}" class="btn btn-outline-primary">
+            بازگشت به داشبورد
+        </a>
+    </div>
+</div>
+{% endblock %} 

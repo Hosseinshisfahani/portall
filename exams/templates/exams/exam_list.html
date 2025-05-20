@@ -1,0 +1,140 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+{% load exam_tags %}
+
+{% block title %}پلتفرم جامع آموزشی - آزمون‌ها{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Hint announcement -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h5 class="text-center mb-3"><i class="fas fa-calendar-alt me-2"></i> زمان برگزاری آزمون‌ها</h5>
+                <ul class="mb-0">
+                    <li><strong>عربی هشتم و عربی نهم:</strong> زمان برگزاری پانزده خرداد</li>
+                    <li><strong>دین و زندگی دهم و دین و زندگی دوازدهم کامپیوتر:</strong> زمان برگزاری بیست و پنج اردیبهشت</li>
+                    <li><strong>عربی دهم و عربی یازدهم و عربی دوازدهم معماری:</strong> زمان برگزاری بیست و هفت اردیبهشت</li>
+                    <li><strong>مدیریت خانواده:</strong> زمان برگزاری دوازده خرداد</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center">آزمون‌های آنلاین</h2>
+            <p class="text-center text-muted">از لیست زیر آزمون مورد نظر خود را انتخاب کنید</p>
+        </div>
+    </div>
+
+    {% if approved_exams %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">آزمون‌های آماده شرکت</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for exam in approved_exams %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-success">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ exam.title }}</h5>
+                                    <p class="card-text">{{ exam.description|truncatechars:100 }}</p>
+                                    <div class="mt-auto">
+                                        <p class="mb-1"><strong>درس:</strong> {{ exam.course }}</p>
+                                        <p class="mb-1"><strong>پایه:</strong> {{ exam.grade }}</p>
+                                        <p class="mb-0"><strong>مدت زمان:</strong> {{ exam.duration_minutes }} دقیقه</p>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent border-success">
+                                    {% for reg in exam.examregistration_set.all %}
+                                        {% if reg.user == request.user and reg.status == 'approved' and not reg.completed_at %}
+                                        <a href="{% url 'exams:take_exam' registration_id=reg.id %}" class="btn btn-success w-100">
+                                            شروع آزمون
+                                        </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        {% if exams %}
+            {% for exam in exams %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ exam.title }}</h5>
+                            <p class="card-text">{{ exam.description|truncatechars:150 }}</p>
+                            <div class="mt-auto">
+                                <p class="mb-1"><strong>درس:</strong> {{ exam.course }}</p>
+                                <p class="mb-1"><strong>پایه:</strong> {{ exam.grade }}</p>
+                                <p class="mb-1"><strong>رشته:</strong> {{ exam.field }}</p>
+                                <p class="mb-1"><strong>مدت زمان:</strong> {{ exam.duration_minutes }} دقیقه</p>
+                                <p class="mb-0"><strong>هزینه:</strong> {{ exam.price }} هزار تومان</p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            {% if registration_status %}
+                                {% with reg_status=registration_status|get_item:exam.id %}
+                                {% if reg_status %}
+                                    {% if reg_status == 'pending' %}
+                                        <a href="{% url 'exams:exam_detail' exam_id=exam.id %}" class="btn btn-warning w-100">
+                                            در انتظار تایید پرداخت
+                                        </a>
+                                    {% elif reg_status == 'rejected' %}
+                                        <a href="{% url 'exams:exam_detail' exam_id=exam.id %}" class="btn btn-danger w-100">
+                                            رد شده - مشاهده جزئیات
+                                        </a>
+                                    {% elif reg_status == 'approved' %}
+                                        <a href="{% url 'exams:exam_detail' exam_id=exam.id %}" class="btn btn-success w-100">
+                                            تایید شده - شروع آزمون
+                                        </a>
+                                    {% elif reg_status == 'completed' %}
+                                        <a href="{% url 'exams:exam_detail' exam_id=exam.id %}" class="btn btn-secondary w-100">
+                                            تکمیل شده
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'exams:exam_detail' exam_id=exam.id %}" class="btn btn-primary w-100">
+                                        ثبت‌نام
+                                    </a>
+                                {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <a href="{% url 'exams:exam_detail' exam_id=exam.id %}" class="btn btn-primary w-100">
+                                    ثبت‌نام
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center mt-4">
+                <div class="alert alert-info">
+                    در حال حاضر آزمونی موجود نیست.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'exams:my_exams' %}" class="btn btn-outline-primary">
+                آزمون‌های من
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

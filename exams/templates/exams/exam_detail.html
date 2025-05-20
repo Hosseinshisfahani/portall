@@ -1,0 +1,153 @@
+{% extends 'gym/base.html' %}
+{% load static %}
+{% load exam_tags %}
+
+{% block title %}پلتفرم جامع آموزشی - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">{{ exam.title }}</h3>
+                </div>
+                <div class="card-body">
+                    <p>{{ exam.description }}</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>درس:</strong> {{ exam.course }}</p>
+                            <p><strong>پایه:</strong> {{ exam.grade }}</p>
+                            <p><strong>رشته:</strong> {{ exam.field }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>مدت زمان:</strong> {{ exam.duration_minutes }} دقیقه</p>
+                            <p><strong>هزینه:</strong> {{ exam.price }} هزار تومان</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5>توضیحات آزمون:</h5>
+                    <ul>
+                        <li>در این آزمون، پاسخ سوالات پس از کلیک بر روی دکمه "مشاهده پاسخ" نمایش داده می‌شود.</li>
+                        <li>شما می‌توانید به سوالات به ترتیب دلخواه پاسخ دهید.</li>
+                        <li>زمان آزمون از لحظه شروع، محاسبه می‌شود و در صورت اتمام زمان، آزمون به طور خودکار پایان می‌یابد.</li>
+                        <li>پس از ثبت‌نام، لازم است مدیر سیستم پرداخت شما را تایید نماید. سپس آزمون فعال خواهد شد.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">وضعیت ثبت‌نام</h5>
+                </div>
+                <div class="card-body">
+                    {% if registration %}
+                        <div class="text-center mb-3">
+                            <div class="alert 
+                                {% if registration.status == 'pending' %}alert-warning
+                                {% elif registration.status == 'rejected' %}alert-danger
+                                {% elif registration.status == 'approved' %}alert-success
+                                {% elif registration.status == 'completed' %}alert-secondary
+                                {% endif %}">
+                                {% if registration.status == 'pending' %}
+                                    <i class="fas fa-clock"></i> در انتظار تایید پرداخت
+                                {% elif registration.status == 'rejected' %}
+                                    <i class="fas fa-times-circle"></i> رد شده
+                                {% elif registration.status == 'approved' %}
+                                    <i class="fas fa-check-circle"></i> تایید شده
+                                {% elif registration.status == 'completed' %}
+                                    <i class="fas fa-flag-checkered"></i> تکمیل شده
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p><strong>تاریخ ثبت‌نام:</strong> {{ registration.created_at|date:"Y/m/d" }}</p>
+                            {% if registration.started_at %}
+                                <p><strong>تاریخ شروع آزمون:</strong> {{ registration.started_at|date:"Y/m/d H:i" }}</p>
+                            {% endif %}
+                            {% if registration.completed_at %}
+                                <p><strong>تاریخ پایان آزمون:</strong> {{ registration.completed_at|date:"Y/m/d H:i" }}</p>
+                            {% endif %}
+                            {% if registration.admin_note %}
+                                <div class="alert alert-info">
+                                    <strong>یادداشت مدیر:</strong> {{ registration.admin_note }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-center">
+                            {% if registration.status == 'rejected' %}
+                                <p class="text-danger mb-3">پرداخت شما به دلایل بالا رد شده است. برای بررسی مجدد با مدیر سیستم تماس بگیرید.</p>
+                            {% elif registration.status == 'approved' and not registration.completed_at %}
+                                <a href="{% url 'exams:take_exam' registration_id=registration.id %}" class="btn btn-success w-100">
+                                    <i class="fas fa-play-circle"></i> شروع آزمون
+                                </a>
+                            {% elif registration.status == 'approved' and registration.completed_at %}
+                                <p class="text-success mb-3">شما این آزمون را با موفقیت به پایان رسانده‌اید.</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="registration-form">
+                            <p class="text-center mb-3">برای شرکت در این آزمون، لطفا فرم زیر را تکمیل نمایید:</p>
+                            
+                            {% if settings %}
+                                <div class="alert alert-info mb-4">
+                                    <h6 class="alert-heading mb-2"><i class="fas fa-info-circle"></i> اطلاعات پرداخت:</h6>
+                                    <p class="mb-2">
+                                        <strong>شماره کارت:</strong> 
+                                        <span class="font-monospace">{{ settings.payment_card_number|card_format }}</span>
+                                    </p>
+                                    {% if settings.payment_card_owner %}
+                                        <p class="mb-2"><strong>به نام:</strong> {{ settings.payment_card_owner }}</p>
+                                    {% endif %}
+                                    <p class="mb-0"><strong>مبلغ قابل پرداخت:</strong> {{ exam.price }} هزار تومان</p>
+                                    {% if settings.payment_description %}
+                                        <hr>
+                                        <p class="mb-0 small">{{ settings.payment_description }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.payment_image.id_for_label }}">
+                                        {{ form.payment_image.label }}:
+                                    </label>
+                                    {{ form.payment_image }}
+                                    {% if form.payment_image.errors %}
+                                        <div class="text-danger mt-1">
+                                            {{ form.payment_image.errors }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        تصویر فیش پرداخت یا رسید آنلاین خود را آپلود کنید.
+                                    </small>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-check-circle"></i> ثبت‌نام در آزمون
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{% url 'exams:exam_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right"></i> بازگشت به لیست آزمون‌ها
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
