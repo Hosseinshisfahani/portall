@@ -119,11 +119,18 @@ def profile(request, user_id=None):
             return redirect('gym:profile')
     else:
         # Get or create current user's profile
-        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
-        
-        # If profile was just created, set some default values
-        if created:
-            user_profile.save()
+        try:
+            user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+            
+            # If profile was just created, set some default values
+            if created:
+                user_profile.save()
+        except IntegrityError as e:
+            if 'melli_code' in str(e):
+                return render(request, 'gym/duplicate_melli_code.html')
+            else:
+                # If it's a different IntegrityError, re-raise it
+                raise
     
     context = {
         'user_profile': user_profile,
@@ -134,7 +141,13 @@ def profile(request, user_id=None):
 @login_required
 def edit_profile(request):
     # Get or create user profile
-    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+    try:
+        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+    except IntegrityError as e:
+        if 'melli_code' in str(e):
+            return render(request, 'gym/duplicate_melli_code.html')
+        else:
+            raise
     
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
@@ -162,8 +175,11 @@ def edit_profile(request):
                 
                 messages.success(request, 'پروفایل شما با موفقیت به‌روزرسانی شد.')
                 return redirect('gym:profile')
-            except IntegrityError:
-                messages.error(request, 'خطا در ذخیره اطلاعات. لطفا اطلاعات وارد شده را بررسی کنید.')
+            except IntegrityError as e:
+                if 'melli_code' in str(e):
+                    return render(request, 'gym/duplicate_melli_code.html')
+                else:
+                    messages.error(request, 'خطا در ذخیره اطلاعات. لطفا اطلاعات وارد شده را بررسی کنید.')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
