@@ -137,6 +137,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+/home/hossein/projects/Shirneshan_process/after_exam_process/venv_new
+
 
 # Spyder project settings
 .spyderproject
