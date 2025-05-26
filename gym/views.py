@@ -33,6 +33,7 @@ import random
 from django.core.mail import send_mail
 from django.conf import settings
 from exams.models import ExamPayment
+from django.views.decorators.csrf import csrf_exempt
 
 # Home view
 def home(request):
@@ -65,6 +66,7 @@ def register_view(request):
         form = UserRegistrationForm()
     return render(request, 'gym/register.html', {'form': form})
 
+@csrf_exempt
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')

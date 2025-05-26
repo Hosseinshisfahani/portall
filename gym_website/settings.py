@@ -209,3 +209,8 @@ LOGGING = {
         },
     },
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://shirneshansport.ir',
+    'http://shirneshansport.ir',
+]
