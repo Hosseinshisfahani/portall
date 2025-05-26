@@ -61,6 +61,7 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+media/
 
 # Flask stuff:
 instance/
@@ -136,6 +137,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+/home/hossein/projects/Shirneshan_process/after_exam_process/venv_new
+/home/Gym_web/venv
 
 # Spyder project settings
 .spyderproject
@@ -175,3 +178,9 @@ Thumbs.db
 
 # Local development settings
 .env.local
+
+# Python virtual environments
+venv_new/
+venv/
+env/
+.env
